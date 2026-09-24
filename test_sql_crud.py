@@ -5,7 +5,7 @@ from sql_crud import (
     create_database,
     load_data,
     select_flights,
-    update_base_fare,
+    update_seat_remaining,
     delete_flight,
 )
 from flight import Flight
@@ -40,28 +40,29 @@ def test_load_data():
     assert df.loc[2, "flight_id"] == "PA3014"
 
 
-def test_update_base_fare():
+def test_update_seat_remaining():
     create_database()
 
     # Load the Data
-    f1 = Flight("PA3012", "YYZ", "HAN", "2026-12-04", "17:20", 3000.0, 350, 140, 1.02, "medium", "regular", True)
-    f2 = Flight("PA3013", "YEG", "YHZ", "2026-11-04", "17:20", 2450.0, 350, 140, 1.02, "medium", "regular", True)
-    f3 = Flight("PA3014", "YWG", "YUL", "2026-10-05", "17:20", 1200.0, 350, 140, 1.02, "medium", "regular", True)
+    f1 = Flight("PA3012", "YYZ", "HAN", "2026-12-04", "17:20", 3000.0, 350, 141, 1.02, "medium", "regular", True)
+    f2 = Flight("PA3013", "YEG", "YHZ", "2026-11-04", "17:20", 2450.0, 350, 151, 1.02, "medium", "regular", True)
+    f3 = Flight("PA3014", "YWG", "YUL", "2026-10-05", "17:20", 1200.0, 350, 161, 1.02, "medium", "regular", True)
 
     flights_lst = [f1, f2, f3]
     load_data(flights_lst)
 
     # Update the data
-    flight_update_lst = [("PA-Non-existent", 2500), ("PA3013", 1200), ("PA3014", 870)]
-    update_base_fare(flight_update_lst)
+    update_seat_remaining("PA-Non-existent", 2500)
+    update_seat_remaining(f2.flight_id, f2.seat_remaining)
+    update_seat_remaining(f3.flight_id, f3.seat_remaining)
 
     # Check the results
     flights_id_lst = ["PA3012", "PA3013", "PA3014"]
     df = select_flights(flights_id_lst)
 
-    assert df.loc[0, "base_fare_cad"] == 3000.0
-    assert df.loc[1, "base_fare_cad"] == 1200
-    assert df.loc[2, "base_fare_cad"] == 870
+    assert df.loc[0, "seat_remaining"] == 141
+    assert df.loc[1, "seat_remaining"] == 150
+    assert df.loc[2, "seat_remaining"] == 160
 
 
 def test_delete_flight():
