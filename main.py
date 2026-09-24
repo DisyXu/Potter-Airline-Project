@@ -9,7 +9,7 @@ import pandas as pd
 from analysis import load_flights, clean_flights, filter_flights, rank_flights, summarize_by
 from flight import Flight
 from pricing import calculate_price
-from sql_crud import create_database, load_data, select_flights, delete_flight
+from sql_crud import create_database, load_data, select_flights, delete_flight, update_seat_remaining
 
 # helper function to calculate price for a single flight
 def get_price(row):
@@ -62,9 +62,11 @@ def main():
     row = clean_flights(select_flights(["PA0059"])).iloc[0]
     print("Before: seats =", row["seats_remaining"], " price =", get_price(row))
 
-    with sqlite3.connect("potter_airline.db") as conn:
-        conn.execute("UPDATE flights SET seats_remaining = ? WHERE flight_id = ?",
-                     (5, "PA0059"))
+    # with sqlite3.connect("potter_airline.db") as conn:
+    #     conn.execute("UPDATE flights SET seats_remaining = ? WHERE flight_id = ?",
+    #                  (5, "PA0059"))
+    current_seats = select_flights(["PA0059"])["seats_remaining"]
+    update_seat_remaining("PA0059", current_seats)
 
     row = clean_flights(select_flights(["PA0059"])).iloc[0]
     print("After:  seats =", row["seats_remaining"], " price =", get_price(row))
