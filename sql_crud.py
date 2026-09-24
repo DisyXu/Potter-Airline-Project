@@ -2,9 +2,12 @@ import pandas as pd
 import numpy as np
 import sqlite3
 
+from analysis import clean_flights
+
 
 def create_database():
     df_flights = pd.read_csv(r"potter_airlines_flights.csv")
+    df_flights = clean_flights(df_flights)
 
     with sqlite3.connect("potter_airline.db") as conn:
         conn.execute("""
