@@ -40,15 +40,24 @@ class Flight:
         self.season = season
         self.is_weekend = bool(is_weekend)
 
-    def occupancy_rate(self):
-        seats_booked = self.capacity - self.seats_remaining
-        return float (seats_booked / self.capacity*100)
 
-    def days_to_departure(self, reference_date=None):
+    def occupancy_rate(self):
+        if self.capacity <= 0:
+            raise ValueError("Capacity must be greater than 0")
+        if self.seats_remaining > self.capacity:
+            raise ValueError("Seats remaining cannot exceed capacity")
+        
+        seats_booked = self.capacity - self.seats_remaining
+        rate = seats_booked / self.capacity * 100
+        return round(rate, 2)
+    
+
+    def days_to_departure(self, reference_date = None):
         if reference_date is None:
             reference_date = date.today()
 
         return (self.departure_date - reference_date).days
+
 
     def to_dict(self):
         return {
@@ -66,3 +75,7 @@ class Flight:
             "is_weekend": self.is_weekend
         }
 
+
+    def __repr__(self) -> str:
+        return f"<Flight {self.flight_id}: {self.origin}->{self.destination} on {self.departure_date} for ${self.base_fare_cad:.2f}, \
+        {self.seats_remaining/self.capacity*100:.2f}% seats remaining, demand score: {self.demand_score:.2f}>"
