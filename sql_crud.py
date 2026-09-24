@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
 import sqlite3
+from analysis import clean_flights
 
 
 def create_database():
     df_flights = pd.read_csv(r"potter_airlines_flights.csv")
+
+    df_clean_flights = clean_flights(df_flights)
 
     with sqlite3.connect("potter_airline.db") as conn:
         conn.execute("""
@@ -28,7 +31,7 @@ def create_database():
                 )
             """)
 
-        df_flights.to_sql("flights", conn, if_exists="append", index=False)
+        df_clean_flights.to_sql("flights", conn, if_exists="append", index=False)
         print("Database created successfully")
 
 
@@ -70,14 +73,14 @@ def select_flights(flights_id_lst):
             return pd.concat(all_results, ignore_index=True)
 
 
-def update_base_fare(flight_update_lst):
+# Input should be a tuple ("PA001", 500)
+def update_seat_remaining(flight_id, number_of_seats):
     with sqlite3.connect("potter_airline.db") as conn:
-        for flight in flight_update_lst:
             result = conn.execute("""
                         UPDATE flights
-                        SET base_fare_cad = ?
+                        SET seats_remaining = ?
                         WHERE flight_id = ?
-                        """, (flight[1], flight[0]))
+                        """, (number_of_seats - 1, flight_id))
 
 
 def delete_flight(flight_delete_lst):
