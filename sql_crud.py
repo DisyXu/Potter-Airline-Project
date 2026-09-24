@@ -75,14 +75,14 @@ def select_flights(flights_id_lst):
             return pd.DataFrame()
 
 
-def update_base_fare(flight_update_lst):
+# Input should be a tuple ("PA001", 500)
+def update_seat_remaining(flight_id, number_of_seats):
     with sqlite3.connect("potter_airline.db") as conn:
-        for flight in flight_update_lst:
             result = conn.execute("""
                         UPDATE flights
-                        SET base_fare_cad = ?
+                        SET seats_remaining = ?
                         WHERE flight_id = ?
-                        """, (flight[1], flight[0]))
+                        """, (number_of_seats - 1, flight_id))
 
 
 def delete_flight(flight_delete_lst):
