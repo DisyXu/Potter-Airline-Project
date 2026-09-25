@@ -39,17 +39,17 @@ class Flight:
         self.demand_level = demand_level
         self.season = season
         self.is_weekend = bool(is_weekend)
+        self.validate()
 
-
-    def occupancy_rate(self):
+    def validate(self):
         if self.capacity <= 0:
             raise ValueError("Capacity must be greater than 0")
+        if self.seats_remaining < 0: 
+            raise ValueError("Seats cannot be less than 0")
         if self.seats_remaining > self.capacity:
             raise ValueError("Seats remaining cannot exceed capacity")
-        
-        seats_booked = self.capacity - self.seats_remaining
-        rate = seats_booked / self.capacity * 100
-        return round(rate, 2)
+        if self.base_fare_cad <= 0:
+            raise ValueError("Base fare must be greater than 0")
     
 
     def days_to_departure(self, reference_date = None):
@@ -74,6 +74,7 @@ class Flight:
             "season": self.season,
             "is_weekend": self.is_weekend
         }
+
 
 
     def __repr__(self) -> str:
