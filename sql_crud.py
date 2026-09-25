@@ -2,9 +2,12 @@ import pandas as pd
 import numpy as np
 import sqlite3
 
+from analysis import clean_flights
+
 
 def create_database():
     df_flights = pd.read_csv(r"potter_airlines_flights.csv")
+    df_flights = clean_flights(df_flights)
 
     with sqlite3.connect("potter_airline.db") as conn:
         conn.execute("""
@@ -14,17 +17,17 @@ def create_database():
         conn.execute("""
                 CREATE TABLE flights (
                     flight_id TEXT PRIMARY KEY,
-                    origin TEXT,
-                    destination TEXT,
-                    departure_date DATE,
-                    departure_time TEXT,
-                    base_fare_cad FLOAT,
-                    capacity INT,
-                    seats_remaining INT,
-                    demand_score FLOAT,
-                    demand_level TEXT,
-                    season TEXT,
-                    is_weekend TEXT
+                    origin TEXT NOT NULL,
+                    destination TEXT NOT NULL,
+                    departure_date DATE NOT NULL,
+                    departure_time TEXT NOT NULL,
+                    base_fare_cad REAL NOT NULL,
+                    capacity INTEGER NOT NULL,
+                    seats_remaining INT NOT NULL,
+                    demand_score REAL NOT NULL,
+                    demand_level TEXT NOT NULL,
+                    season TEXT NOT NULL,
+                    is_weekend TEXT NOT NULL
                 )
             """)
 
@@ -65,19 +68,24 @@ def select_flights(flights_id_lst):
                         """, conn, params=(flight_id,))
             if result_df.empty:
                 print(f"Flight {flight_id} can not be found in the database")
-            all_results.append(result_df)
-        if not pd.concat(all_results, ignore_index=True).empty:
+            else:
+                all_results.append(result_df)
+        # if not pd.concat(all_results, ignore_index=True).empty:
+        #     return pd.concat(all_results, ignore_index=True)
+        if all_results:
             return pd.concat(all_results, ignore_index=True)
+        else:
+            return pd.DataFrame()
 
 
-def update_base_fare(flight_update_lst):
+# Input should be a tuple ("PA001", 500)
+def update_seat_remaining(flight_id, number_of_seats):
     with sqlite3.connect("potter_airline.db") as conn:
-        for flight in flight_update_lst:
             result = conn.execute("""
                         UPDATE flights
-                        SET base_fare_cad = ?
+                        SET seats_remaining = ?
                         WHERE flight_id = ?
-                        """, (flight[1], flight[0]))
+                        """, (number_of_seats - 1, flight_id))
 
 
 def delete_flight(flight_delete_lst):
