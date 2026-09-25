@@ -1,0 +1,99 @@
+import pandas as pd
+import numpy as np
+import sqlite3
+
+from analysis import clean_flights
+
+
+def create_database():
+    df_flights = pd.read_csv(r"potter_airlines_flights.csv")
+    df_flights = clean_flights(df_flights)
+
+    with sqlite3.connect("potter_airline.db") as conn:
+        conn.execute("""
+            DROP TABLE IF EXISTS flights
+        """)
+
+        conn.execute("""
+                CREATE TABLE flights (
+                    flight_id TEXT PRIMARY KEY,
+                    origin TEXT NOT NULL,
+                    destination TEXT NOT NULL,
+                    departure_date DATE NOT NULL,
+                    departure_time TEXT NOT NULL,
+                    base_fare_cad REAL NOT NULL,
+                    capacity INTEGER NOT NULL,
+                    seats_remaining INT NOT NULL,
+                    demand_score REAL NOT NULL,
+                    demand_level TEXT NOT NULL,
+                    season TEXT NOT NULL,
+                    is_weekend TEXT NOT NULL
+                )
+            """)
+
+        df_flights.to_sql("flights", conn, if_exists="append", index=False)
+        print("Database created successfully")
+
+
+def load_data(flights_lst):
+    with sqlite3.connect("potter_airline.db") as conn:
+        for flight in flights_lst:
+            conn.execute("""
+                INSERT INTO flights VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                flight.flight_id,
+                flight.origin,
+                flight.destination,
+                flight.departure_date,
+                flight.departure_time,
+                flight.base_fare_cad,
+                flight.capacity,
+                flight.seats_remaining,
+                flight.demand_score,
+                flight.demand_level,
+                flight.season,
+                flight.is_weekend,
+            ))
+    print("Flight(s) loaded successfully into the database")
+
+
+def select_flights(flights_id_lst):
+    with sqlite3.connect("potter_airline.db") as conn:
+        all_results = []
+        for flight_id in flights_id_lst:
+            result_df = pd.read_sql_query("""
+                        SELECT *
+                        FROM flights
+                        WHERE flight_id = ?
+                        """, conn, params=(flight_id,))
+            if result_df.empty:
+                print(f"Flight {flight_id} can not be found in the database")
+            else:
+                all_results.append(result_df)
+        # if not pd.concat(all_results, ignore_index=True).empty:
+        #     return pd.concat(all_results, ignore_index=True)
+        if all_results:
+            return pd.concat(all_results, ignore_index=True)
+        else:
+            return pd.DataFrame()
+
+
+# Input should be a tuple ("PA001", 500)
+def update_seat_remaining(flight_id, number_of_seats):
+    with sqlite3.connect("potter_airline.db") as conn:
+            result = conn.execute("""
+                        UPDATE flights
+                        SET seats_remaining = ?
+                        WHERE flight_id = ?
+                        """, (number_of_seats - 1, flight_id))
+
+
+def delete_flight(flight_delete_lst):
+    with sqlite3.connect("potter_airline.db") as conn:
+        for flight_id in flight_delete_lst:
+            if select_flights([flight_id]) is not None:
+                conn.execute("""
+                    DELETE FROM flights
+                    WHERE flight_id = ?
+                    """, (flight_id,))
+                print(f"Flight {flight_id} deleted from database")
