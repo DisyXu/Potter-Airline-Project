@@ -1,13 +1,6 @@
 import numpy as np
 
-
 def calculate_price (flight):
-    # check errors
-    if flight.capacity <= 0:
-        raise ValueError("capacity must be greater than 0")
-    if flight.seats_remaining <= 0 or flight.seats_remaining > flight.capacity:
-        raise ValueError("seats_remaining must be between 1 and capacity")
-
     # calculate factors
     base_fare = flight.base_fare_cad
     time_factor = calculate_time_factor(flight)
@@ -34,9 +27,7 @@ def calculate_price (flight):
 
 def calculate_time_factor (flight):
     days_until_departure = flight.days_to_departure()
-    if (days_until_departure < 0):
-        raise ValueError("Days to departure must be greater than or equal to 0")
-
+    
     # construct a sigmoid curve to calculate time factor
     max_premium = 0.5
     k = 0.35
@@ -47,14 +38,6 @@ def calculate_time_factor (flight):
 
 
 def calculate_capacity_factor (flight):
-    # error checking
-    if (flight.seats_remaining <= 0):
-         raise ValueError("Seats remaining must be greater than 0")
-    if (flight.capacity <= 0):
-        raise ValueError("Capacity must be greater than 0")
-    if (flight.capacity < flight.seats_remaining):
-        raise ValueError("Capacity must be greater than seats remaining")
-
     load_factor = 1 - (flight.seats_remaining / flight.capacity)
     capacity_factor = 1 + 0.45 * load_factor
 
@@ -63,9 +46,6 @@ def calculate_capacity_factor (flight):
 
 def calculate_seasonal_factor (flight):
     season = flight.season.lower()
-    # error checking
-    if (season != "peak" and season != "shoulder" and season != "regular"):
-        raise ValueError("Season must be peak, shoulder, or regular")
     
     if (season == "peak"):
         seasonal_factor = 1.43
@@ -78,16 +58,9 @@ def calculate_seasonal_factor (flight):
 
 
 def calculate_weekend_factor (flight):
-    # error checking
-    if (not(isinstance(flight.is_weekend, bool))):
-        raise TypeError("Weekend must be True or False") 
-    
     if (flight.is_weekend == True):
         weekend_factor = 1.13
     else:
         weekend_factor = 1
 
     return (weekend_factor)
-
-
-
