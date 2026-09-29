@@ -99,14 +99,6 @@ def dataset_overview(df):
 #     return df[columns].describe().round(2)
 
 
-# def category_counts(df, column):
-#     # Count and percentage share of each value in a categorical column.
-#     counts = df[column].value_counts()
-#     return pd.DataFrame({
-#         "flights": counts,
-#         "share_pct": (counts / counts.sum() * 100).round(1),
-#    })
-
 # filter and rank
 def filter_flights(df, origin=None, destination=None, max_price=None,
                    start_date=None, end_date=None, available_only=False):
@@ -126,11 +118,6 @@ def filter_flights(df, origin=None, destination=None, max_price=None,
     if available_only:
         mask &= df["seats_remaining"] > 0
     return df[mask].sort_values([PRICE_COLUMN, "flight_id"])
-
-
-# def rank_flights(df, by=PRICE_COLUMN, ascending=True, n=10):
-#     # Top-n flights sorted by any column; flight_id breaks ties.
-#     return df.sort_values([by, "flight_id"], ascending=[ascending, True]).head(n)
 
 
 # group analysis
