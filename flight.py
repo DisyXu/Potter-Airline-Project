@@ -1,3 +1,6 @@
+"""
+Create Flight as a Class
+"""
 from datetime import date, datetime
 
 

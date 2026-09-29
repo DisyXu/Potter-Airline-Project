@@ -1,3 +1,9 @@
+"""
+Build dynamic pricing model for flights based on multiple factors 
+    including time to departure, demand, capacity, seasonality, and weekend travel.
+Pricing structure: price = base_fare * time_factor * demand_factor * capacity_factor * seasonal_factor
+"""
+
 import numpy as np
 
 def calculate_price (flight):
