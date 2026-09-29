@@ -77,14 +77,29 @@ def select_flights(flights_id_lst):
 
 
 # Input should be a tuple ("PA001", 500)
-def update_seats_remaining(flight_id, remaining_seats):
-    with sqlite3.connect("potter_airline.db") as conn:
-            result = conn.execute("""
-                        UPDATE flights
-                        SET seats_remaining = ?
-                        WHERE flight_id = ?
-                        """, (remaining_seats - 1, flight_id))
+# def update_seats_remaining(flight_id, remaining_seats):
+#     with sqlite3.connect("potter_airline.db") as conn:
+#             result = conn.execute("""
+#                         UPDATE flights
+#                         SET seats_remaining = ?
+#                         WHERE flight_id = ?
+#                         """, (remaining_seats - 1, flight_id))
 
+
+# Book 1 seat by default.
+# Raises ValueError if the flight doesn't exist or doesn't have enough seats.
+def update_seats_remaining(flight_id, seats_booked = 1):
+    if not isinstance(seats_booked, int) or seats_booked <= 0:
+        raise ValueError("seats_booked must be a positive integer")
+    with sqlite3.connect("potter_airline.db") as conn:
+        row = conn.execute("SELECT seats_remaining FROM flights WHERE flight_id = ?",
+                           (flight_id,)).fetchone()
+        if row is None:
+            raise ValueError(f"Flight {flight_id} not found")
+        if seats_booked > row[0]:
+            raise ValueError("Not enough seats remaining")
+        conn.execute("UPDATE flights SET seats_remaining = seats_remaining - ? WHERE flight_id = ?",
+                     (seats_booked, flight_id))
 
 def delete_flight(flight_delete_lst):
     with sqlite3.connect("potter_airline.db") as conn:
