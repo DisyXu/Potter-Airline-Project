@@ -4,6 +4,7 @@ Data cleaning and multi-flight analysis for Potter Airlines.
 # import modules
 import sqlite3
 import pandas as pd
+from datetime import date
  
 from flight import Flight
 from pricing import calculate_price
@@ -36,6 +37,7 @@ def clean_flights(df):
         & (df["base_fare_cad"] > 0)
         & (df["demand_score"] > 0)
         & df["season"].isin(VALID_SEASONS)
+        & (df["departure_date"] >= pd.Timestamp.now().normalize())
     )
 
     # keep only valid rows and drop duplicates by flight_id

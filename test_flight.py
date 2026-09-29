@@ -104,6 +104,7 @@ def test_days_to_departure():
     assert flight.days_to_departure(reference_date) == 9
 
 
+
 def test_departure_today():
     flight = create_test_flight()
 

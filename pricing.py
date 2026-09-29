@@ -74,3 +74,5 @@ def calculate_weekend_factor (flight):
         weekend_factor = 1
 
     return (weekend_factor)
+
+

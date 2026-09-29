@@ -143,11 +143,19 @@ def run_system_checks(flights):
     results = []
 
     # price bounds (vectorized): every fare must stay within 0.7x - 3.0x of the base fare
-    in_bounds = ((flights["price"] >= flights["base_fare_cad"] * 0.7 - 0.01)
-                 & (flights["price"] <= flights["base_fare_cad"] * 3.0 + 0.01)).all()
-    results.append(("All prices within 0.7x - 3.0x of base fare", bool(in_bounds)))
+    lower = flights["base_fare_cad"] * 0.7 - 0.01
+    upper = flights["base_fare_cad"] * 3.0 + 0.01
+
+    failed = flights[
+        (flights["price"] < lower) |
+        (flights["price"] > upper)
+    ]
+
+    results.append(("All prices within 0.7x - 3.0x of base fare", failed.empty))
+
 
     # SQL: insert -> select -> delete a test flight (parameterized queries)
+
     test_flight = Flight("PA9999", "YYZ", "YVR", "2026-12-24", "09:00", 300.0, 200, 50, 1.2, "medium", "peak", False)
     with contextlib.redirect_stdout(io.StringIO()):          # silence the CRUD print messages
         delete_flight(["PA9999"])
