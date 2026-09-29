@@ -5,7 +5,7 @@ from sql_crud import (
     create_database,
     load_data,
     select_flights,
-    update_seat_remaining,
+    update_seats_remaining,
     delete_flight,
 )
 from flight import Flight
@@ -40,7 +40,7 @@ def test_load_data():
     assert df.loc[2, "flight_id"] == "PA3014"
 
 
-def test_update_seat_remaining():
+def test_update_seats_remaining():
     create_database()
 
     # Load the Data
@@ -52,17 +52,17 @@ def test_update_seat_remaining():
     load_data(flights_lst)
 
     # Update the data
-    update_seat_remaining("PA-Non-existent", 2500)
-    update_seat_remaining(f2.flight_id, f2.seat_remaining)
-    update_seat_remaining(f3.flight_id, f3.seat_remaining)
+    update_seats_remaining("PA-Non-existent", 2500)
+    update_seats_remaining(f2.flight_id, f2.seats_remaining)
+    update_seats_remaining(f3.flight_id, f3.seats_remaining)
 
     # Check the results
     flights_id_lst = ["PA3012", "PA3013", "PA3014"]
     df = select_flights(flights_id_lst)
 
-    assert df.loc[0, "seat_remaining"] == 141
-    assert df.loc[1, "seat_remaining"] == 150
-    assert df.loc[2, "seat_remaining"] == 160
+    assert df.loc[0, "seats_remaining"] == 141
+    assert df.loc[1, "seats_remaining"] == 150
+    assert df.loc[2, "seats_remaining"] == 160
 
 
 def test_delete_flight():
@@ -83,4 +83,4 @@ def test_delete_flight():
     # Check the results
     df = select_flights(flight_delete_lst)
 
-    assert df is None
+    assert df.empty

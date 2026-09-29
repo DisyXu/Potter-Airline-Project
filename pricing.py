@@ -1,6 +1,10 @@
 import numpy as np
 
 def calculate_price (flight):
+    # no price for sold-out flights
+    if flight.seats_remaining == 0:
+        return None
+    
     # calculate factors
     base_fare = flight.base_fare_cad
     time_factor = calculate_time_factor(flight)

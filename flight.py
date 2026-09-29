@@ -41,6 +41,7 @@ class Flight:
         self.is_weekend = bool(is_weekend)
         self.validate()
 
+
     def validate(self):
         if self.capacity <= 0:
             raise ValueError("Capacity must be greater than 0")
@@ -50,6 +51,12 @@ class Flight:
             raise ValueError("Seats remaining cannot exceed capacity")
         if self.base_fare_cad <= 0:
             raise ValueError("Base fare must be greater than 0")
+        if self.demand_score <= 0:
+            raise ValueError("Demand score must be greater than 0")
+        if self.season not in ["peak", "regular", "shoulder"]:
+            raise ValueError("Season must be 'peak', 'regular', or 'shoulder'")
+        if not isinstance(self.is_weekend, bool):
+            raise ValueError("is_weekend must be a boolean value")
     
 
     def days_to_departure(self, reference_date = None):
