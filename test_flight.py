@@ -113,23 +113,6 @@ def test_departure_today():
     assert flight.days_to_departure(reference_date) == 0
 
 
-# Tests for to_dict
-
-def test_to_dict_flight_id():
-    flight = create_test_flight()
-
-    flight_dict = flight.to_dict()
-
-    assert flight_dict["flight_id"] == "PA9999"
-
-
-def test_to_dict_capacity():
-    flight = create_test_flight()
-
-    flight_dict = flight.to_dict()
-
-    assert flight_dict["capacity"] == 200
-
 
 # Tests for boolean values of is_weekend
 def test_boolean_parsing():

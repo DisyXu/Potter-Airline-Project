@@ -69,24 +69,6 @@ class Flight:
         return (self.departure_date - reference_date).days
 
 
-    def to_dict(self):
-        return {
-            "flight_id": self.flight_id,
-            "origin": self.origin,
-            "destination": self.destination,
-            "departure_date": self.departure_date.isoformat(),
-            "departure_time": self.departure_time,
-            "base_fare_cad": self.base_fare_cad,
-            "capacity": self.capacity,
-            "seats_remaining": self.seats_remaining,
-            "demand_score": self.demand_score,
-            "demand_level": self.demand_level,
-            "season": self.season,
-            "is_weekend": self.is_weekend
-        }
-
-
-
     def __repr__(self) -> str:
         return f"<Flight {self.flight_id}: {self.origin}->{self.destination} on {self.departure_date} for ${self.base_fare_cad:.2f}, \
         {self.seats_remaining/self.capacity*100:.2f}% seats remaining, demand score: {self.demand_score:.2f}>"

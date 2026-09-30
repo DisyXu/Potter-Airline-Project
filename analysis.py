@@ -4,7 +4,6 @@ Data cleaning and multi-flight analysis for Potter Airlines.
 # import modules
 import sqlite3
 import pandas as pd
-from datetime import date
  
 from flight import Flight
 from pricing import calculate_price
@@ -42,8 +41,9 @@ def clean_flights(df):
 
     # keep only valid rows and drop duplicates by flight_id
     invalid_ids = df.loc[~valid, "flight_id"].tolist()
-    if invalid_ids:
-        print(f"Dropped invalid flights: {invalid_ids}")
+    # n = len(invalid_ids)
+    # if invalid_ids:
+    #     print(f"Dropped {n} invalid flights.")
     df = df[valid].drop_duplicates(subset="flight_id")
 
     # checks on the cleaned dataset
@@ -92,13 +92,6 @@ def dataset_overview(df):
         "avg_price": round(df[PRICE_COLUMN].mean(), 2),
         "avg_occupancy": round(df["occupancy_rate"].mean(), 1),
     }
-
-
-# def numeric_summary(df):
-#     # describe() statistics for the main numeric columns.
-#     columns = ["base_fare_cad", PRICE_COLUMN, "capacity", "seats_remaining",
-#                "demand_score", "occupancy_rate"]
-#     return df[columns].describe().round(2)
 
 
 # filter and rank

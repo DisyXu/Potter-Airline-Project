@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from analysis import (
-    add_prices, clean_flights, dataset_overview, filter_flights, summarize_by
+    clean_flights, dataset_overview, filter_flights, summarize_by
 )
 
 

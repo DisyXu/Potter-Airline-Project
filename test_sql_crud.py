@@ -14,8 +14,6 @@ from flight import Flight
 
 
 
-
-
 def test_create_database_and_select_data():
     create_database()
     flights_id_lst = ["PA0001", "PA0002"]

@@ -34,7 +34,7 @@ MAX_SHOWN = 15          # max flights listed per search
 # terminal colours
 BOLD, DIM, RED, GREEN, YELLOW, CYAN = "1", "2", "31", "32", "33", "36"
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
-
+FILL_FROM, FILL_TO, TRACK_GREY = 238, 248, 254
 
 class QuitProgram(Exception):
     """Raised when the user types 'q' at any prompt."""
@@ -55,8 +55,16 @@ def money(value):
 
 
 def bar(pct, width=10):
+    # Cells are coloured spaces: a gradient grey for filled seats, a pale grey track for the rest.
     filled = round(pct / 100 * width)
-    return "█" * filled + "░" * (width - filled)
+    cells = []
+    for i in range(width):
+        if i < filled:
+            grey = round(FILL_FROM + (FILL_TO - FILL_FROM) * i / max(width - 1, 1))
+        else:
+            grey = TRACK_GREY
+        cells.append(f"\033[48;5;{grey}m \033[0m")
+    return "".join(cells)
 
 
 def banner(title, subtitle):
