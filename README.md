@@ -4,15 +4,48 @@
 
 A command-line system that prices fictional Potter Airlines flights dynamically and lets a user search and book them. It loads 1,000 flight records into a database, calculates a price for each flight from time, demand, capacity, season and weekend factors, and then runs an interactive booking flow where each booking reduces seats remaining (and therefore updates the next fare).
 
-**Dataset assumptions**
-- 1,000 fictional flights, each with a unique flight ID.
-- Routes are origin/destination airport codes.
-- Departure dates and times are fictional but structured to support the pricing logic.
-- Base fares are in Canadian dollars (CAD).
-- Capacity and seats remaining give the occupancy rate.
-- Demand is stored as both a numeric demand score and a categorical demand level.
-- Each flight is labeled by season and whether it departs on a weekend.
+## Dataset
 
+The project uses one synthetic file, `potter_airlines_flights.csv`, with **1,000 flights** and **12 columns**.
+Each row is one scheduled flight. The data has no missing values, no duplicate `flight_id`s, and no flights
+where origin equals destination. All values are fictional but structured to support the pricing logic.
+
+  
+### Columns
+
+| Column | Type | Description | Values in the data |
+|---|---|---|---|
+| `flight_id` | text | Unique flight identifier (primary key in SQLite) | `PA0001` to `PA1000` |
+| `origin` | text | Departure airport code | 8 airports |
+| `destination` | text | Arrival airport code | 8 airports, never equal to `origin` |
+| `departure_date` | date | Departure date (`YYYY-MM-DD`) | 2026-09-18 to 2027-03-16 |
+| `departure_time` | text | Local departure time (`HH:MM`) | 7 slots: 06:30, 08:15, 10:45, 13:20, 16:10, 18:35, 21:05 |
+| `base_fare_cad` | float | Base fare in CAD before any pricing factors | 85.83 to 285.98 (mean 149.72) |
+| `capacity` | int | Total seats on the aircraft | 120, 150, 180 or 220 |
+| `seats_remaining` | int | Unsold seats; the only column that changes when a flight is booked | 0 to 202 (mean 83.3) |
+| `demand_score` | float | Demand multiplier used directly as a pricing factor | 0.72 to 1.45 (mean 1.10) |
+| `demand_level` | text | Category of `demand_score` | `low` (0.72 to 0.94), `medium` (0.95 to 1.14), `high` (1.15 to 1.45) |
+| `season` | text | Travel season of the departure date | `regular` (509), `peak` (318), `shoulder` (173) |
+| `is_weekend` | bool | True if the departure date is a Saturday or Sunday | True (279), False (721) |
+
+
+- `origin` and `destination` are from 8 Canadian airports (YEG, YHZ, YOW, YUL, YVR, YWG, YYC, YYZ) with 20 directional routes
+- `season` follows the calendar: `peak` is 1 Dec to 31 Jan, `shoulder` is November, and every other date is `regular`
+
+
+### Sample rows
+
+First five rows of the CSV:
+
+| flight_id | origin | destination | departure_date | departure_time | base_fare_cad | capacity | seats_remaining | demand_score | demand_level | season | is_weekend |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| PA0001 | YUL | YYZ | 2026-09-24 | 18:35 | 110.46 | 180 | 0 | 1.32 | high | regular | False |
+| PA0002 | YWG | YYZ | 2026-10-10 | 16:10 | 146.71 | 220 | 1 | 1.05 | medium | regular | True |
+| PA0003 | YHZ | YUL | 2026-09-24 | 16:10 | 132.83 | 150 | 150 | 0.81 | low | regular | False |
+| PA0004 | YYC | YEG | 2027-02-15 | 10:45 | 93.53 | 120 | 84 | 0.88 | low | regular | False |
+| PA0005 | YYZ | YHZ | 2026-10-27 | 08:15 | 165.21 | 180 | 46 | 1.08 | medium | regular | False |
+
+  
 ## Setup / Run
 
 1. Install Python 3 and the dependencies:
@@ -33,7 +66,7 @@ A command-line system that prices fictional Potter Airlines flights dynamically 
 
 ## Design Choices
 
-- **Modular structure:**  `flight.py` (Flight model with validation), `sql_crud.py` (database create/load/select/update/delete), and `analysis.py` (loading priced flights, filtering, summaries) keep responsibilities separate. `main.py` is the entry point and integrates functionality from all of the other project modules.
+- **Modular structure:**  `flight.py` (Flight model with validation), `sql_crud.py` (database create/load/select/update/delete), `pricing.py` (dynamic flight pricing calculation) and `analysis.py` (loading priced flights, filtering, summaries) keep responsibilities separate. `main.py` is the entry point and integrates functionality from all of the other project modules.
 - **Tests gate the program:** the full test suite runs on every start, so the booking system never runs on broken code.
 - **Validation at the source:** invalid data (e.g., seats remaining > capacity) is rejected when a `Flight` is created, and over-booking is rejected before anything is written.
 - **Parameterized SQL queries** are used for database operations. The data is cleaned of invalid flights and past flights before being loaded into the database.
