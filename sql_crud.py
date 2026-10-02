@@ -7,7 +7,7 @@ from analysis import clean_flights
 
 def create_database():
     df_flights = pd.read_csv(r"potter_airlines_flights.csv")
-    df_flights = clean_flights(df_flights)
+    # df_flights = clean_flights(df_flights)
 
     with sqlite3.connect("potter_airline.db") as conn:
         conn.execute("""
@@ -28,8 +28,7 @@ def create_database():
                     demand_level TEXT NOT NULL,
                     season TEXT NOT NULL,
                     is_weekend TEXT NOT NULL
-                )
-            """)
+                )""")
 
         df_flights.to_sql("flights", conn, if_exists="append", index=False)
         print("Database created successfully")
@@ -38,9 +37,10 @@ def create_database():
 def load_data(flights_lst):
     with sqlite3.connect("potter_airline.db") as conn:
         for flight in flights_lst:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO flights VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
+                """, (
                 flight.flight_id,
                 flight.origin,
                 flight.destination,
@@ -52,7 +52,7 @@ def load_data(flights_lst):
                 flight.demand_score,
                 flight.demand_level,
                 flight.season,
-                flight.is_weekend,
+                flight.is_weekend
             ))
     print("Flight(s) loaded successfully into the database")
 
@@ -70,8 +70,6 @@ def select_flights(flights_id_lst):
                 print(f"Flight {flight_id} can not be found in the database")
             else:
                 all_results.append(result_df)
-        # if not pd.concat(all_results, ignore_index=True).empty:
-        #     return pd.concat(all_results, ignore_index=True)
         if all_results:
             return pd.concat(all_results, ignore_index=True)
         else:
@@ -79,19 +77,34 @@ def select_flights(flights_id_lst):
 
 
 # Input should be a tuple ("PA001", 500)
-def update_seat_remaining(flight_id, number_of_seats):
-    with sqlite3.connect("potter_airline.db") as conn:
-            result = conn.execute("""
-                        UPDATE flights
-                        SET seats_remaining = ?
-                        WHERE flight_id = ?
-                        """, (number_of_seats - 1, flight_id))
+# def update_seats_remaining(flight_id, remaining_seats):
+#     with sqlite3.connect("potter_airline.db") as conn:
+#             result = conn.execute("""
+#                         UPDATE flights
+#                         SET seats_remaining = ?
+#                         WHERE flight_id = ?
+#                         """, (remaining_seats - 1, flight_id))
 
+
+# Book 1 seat by default.
+# Raises ValueError if the flight doesn't exist or doesn't have enough seats.
+def update_seats_remaining(flight_id, seats_booked = 1):
+    if not isinstance(seats_booked, int) or seats_booked <= 0:
+        raise ValueError("seats_booked must be a positive integer")
+    with sqlite3.connect("potter_airline.db") as conn:
+        row = conn.execute("SELECT seats_remaining FROM flights WHERE flight_id = ?",
+                           (flight_id,)).fetchone()
+        if row is None:
+            raise ValueError(f"Flight {flight_id} not found")
+        if seats_booked > row[0]:
+            raise ValueError("Not enough seats remaining")
+        conn.execute("UPDATE flights SET seats_remaining = seats_remaining - ? WHERE flight_id = ?",
+                     (seats_booked, flight_id))
 
 def delete_flight(flight_delete_lst):
     with sqlite3.connect("potter_airline.db") as conn:
         for flight_id in flight_delete_lst:
-            if select_flights([flight_id]) is not None:
+            if not select_flights([flight_id]).empty:
                 conn.execute("""
                     DELETE FROM flights
                     WHERE flight_id = ?

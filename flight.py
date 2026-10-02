@@ -1,3 +1,6 @@
+"""
+Create Flight as a Class
+"""
 from datetime import date, datetime
 
 
@@ -41,6 +44,7 @@ class Flight:
         self.is_weekend = bool(is_weekend)
         self.validate()
 
+
     def validate(self):
         if self.capacity <= 0:
             raise ValueError("Capacity must be greater than 0")
@@ -50,6 +54,12 @@ class Flight:
             raise ValueError("Seats remaining cannot exceed capacity")
         if self.base_fare_cad <= 0:
             raise ValueError("Base fare must be greater than 0")
+        if self.demand_score <= 0:
+            raise ValueError("Demand score must be greater than 0")
+        if self.season not in ["peak", "regular", "shoulder"]:
+            raise ValueError("Season must be 'peak', 'regular', or 'shoulder'")
+        if not isinstance(self.is_weekend, bool):
+            raise ValueError("is_weekend must be a boolean value")
     
 
     def days_to_departure(self, reference_date = None):
@@ -57,24 +67,6 @@ class Flight:
             reference_date = date.today()
 
         return (self.departure_date - reference_date).days
-
-
-    def to_dict(self):
-        return {
-            "flight_id": self.flight_id,
-            "origin": self.origin,
-            "destination": self.destination,
-            "departure_date": self.departure_date.isoformat(),
-            "departure_time": self.departure_time,
-            "base_fare_cad": self.base_fare_cad,
-            "capacity": self.capacity,
-            "seats_remaining": self.seats_remaining,
-            "demand_score": self.demand_score,
-            "demand_level": self.demand_level,
-            "season": self.season,
-            "is_weekend": self.is_weekend
-        }
-
 
 
     def __repr__(self) -> str:

@@ -3,15 +3,18 @@ Data cleaning and multi-flight analysis for Potter Airlines.
 """
 # import modules
 import sqlite3
-
 import pandas as pd
+ 
+from flight import Flight
+from pricing import calculate_price
+
 
 # set constants
 DB_PATH = "potter_airline.db"
 PRICE_COLUMN = "price"
 VALID_SEASONS = ["peak", "shoulder", "regular"]
 
-# data cleaning
+# ------------------------------------- load and clean flights -------------------------------------
 def load_flights():
     # Read every flight from SQLite and return a cleaned DataFrame.
     with sqlite3.connect(DB_PATH) as conn:
@@ -33,12 +36,14 @@ def clean_flights(df):
         & (df["base_fare_cad"] > 0)
         & (df["demand_score"] > 0)
         & df["season"].isin(VALID_SEASONS)
+        & (df["departure_date"] >= pd.Timestamp.now().normalize())
     )
 
     # keep only valid rows and drop duplicates by flight_id
     invalid_ids = df.loc[~valid, "flight_id"].tolist()
-    if invalid_ids:
-        print(f"Dropped invalid flights: {invalid_ids}")
+    # n = len(invalid_ids)
+    # if invalid_ids:
+    #     print(f"Dropped {n} invalid flights.")
     df = df[valid].drop_duplicates(subset="flight_id")
 
     # checks on the cleaned dataset
@@ -50,6 +55,30 @@ def clean_flights(df):
     df["occupancy_rate"] = ((df["capacity"] - df["seats_remaining"]) / df["capacity"] * 100).round(2)
     return df
 
+
+# ------------------------------------- calculate prices -------------------------------------
+def row_to_flight(row):
+    # Turn one table row into a Flight object.
+    return Flight(row["flight_id"], row["origin"], row["destination"],
+                  row["departure_date"], row["departure_time"], row["base_fare_cad"],
+                  row["capacity"], row["seats_remaining"], row["demand_score"],
+                  row["demand_level"], row["season"], row["is_weekend"])
+ 
+ 
+def add_prices(df):
+    # Return a copy of df with a `price` column calculated for every flight.
+    df = df.copy()
+    df[PRICE_COLUMN] = df.apply(lambda row: calculate_price(row_to_flight(row)), axis=1)
+    return df
+ 
+ 
+def load_priced_flights():
+    # Load, clean and price every flight in the database.
+    return add_prices(load_flights())
+
+
+# ------------------------------------- analyze flights -------------------------------------
+
 # dataset overview
 def dataset_overview(df):
     # Headline facts about the cleaned dataset.
@@ -60,27 +89,16 @@ def dataset_overview(df):
         "first_departure": df["departure_date"].min().date(),
         "last_departure": df["departure_date"].max().date(),
         "sold_out_flights": int((df["seats_remaining"] == 0).sum()),
+        "avg_price": round(df[PRICE_COLUMN].mean(), 2),
+        "avg_occupancy": round(df["occupancy_rate"].mean(), 1),
     }
 
 
-def numeric_summary(df):
-    # describe() statistics for the main numeric columns.
-    columns = ["base_fare_cad", PRICE_COLUMN, "capacity", "seats_remaining",
-               "demand_score", "occupancy_rate"]
-    return df[columns].describe().round(2)
-
-
-def category_counts(df, column):
-    # Count and percentage share of each value in a categorical column.
-    counts = df[column].value_counts()
-    return pd.DataFrame({
-        "flights": counts,
-        "share_pct": (counts / counts.sum() * 100).round(1),
-    })
-
 # filter and rank
-def filter_flights(df, origin=None, destination=None, max_price=None):
-    # Flights matching every filter given, cheapest first; None or blank means any.
+def filter_flights(df, origin=None, destination=None, max_price=None,
+                   start_date=None, end_date=None, available_only=False):
+    # Flights matching every filter given, cheapest first; None means "any".
+    # Dates are inclusive. available_only=True hides sold-out flights.
     mask = pd.Series(True, index=df.index)
     if origin:
         mask &= df["origin"] == origin.upper()
@@ -88,12 +106,14 @@ def filter_flights(df, origin=None, destination=None, max_price=None):
         mask &= df["destination"] == destination.upper()
     if max_price is not None:
         mask &= df[PRICE_COLUMN] <= max_price
+    if start_date is not None:
+        mask &= df["departure_date"] >= pd.Timestamp(start_date)
+    if end_date is not None:
+        mask &= df["departure_date"] <= pd.Timestamp(end_date)
+    if available_only:
+        mask &= df["seats_remaining"] > 0
     return df[mask].sort_values([PRICE_COLUMN, "flight_id"])
 
-
-def rank_flights(df, by=PRICE_COLUMN, ascending=True, n=10):
-    # Top-n flights sorted by any column; flight_id breaks ties.
-    return df.sort_values([by, "flight_id"], ascending=[ascending, True]).head(n)
 
 # group analysis
 def summarize_by(df, by):
